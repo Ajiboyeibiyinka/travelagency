@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Agency AI Extractor Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen">
+    <div class="max-w-5xl mx-auto py-12 px-4">
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl font-bold text-slate-900 mb-2">Travel Agency AI Extractors</h1>
+            <p class="text-slate-500">Test the flight detail and supplier quote extraction logic live.</p>
+        </header>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden glass border border-slate-200">
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50/50">
+                <button onclick="switchTab('customer')" id="tab-customer"
+                    class="flex-1 py-4 text-sm font-semibold text-slate-600 hover:bg-white transition tab-active">
+                    CUSTOMER INQUIRY
+                </button>
+                <button onclick="switchTab('supplier')" id="tab-supplier"
+                    class="flex-1 py-4 text-sm font-semibold text-slate-600 hover:bg-white transition">
+                    SUPPLIER QUOTE
+                </button>
+                <button onclick="switchTab('response')" id="tab-response"
+                    class="flex-1 py-4 text-sm font-semibold text-slate-600 hover:bg-white transition">
+                    RESPONSE GENERATOR
+                </button>
+            </div>
+
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Input Area -->
+                    <div>
+                        <div id="customer-info-fields"
+                            class="hidden mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase">Customer
+                                        Name</label>
+                                    <input id="customer-name" type="text" class="w-full mt-1 p-2 border rounded"
+                                        value="John Doe">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase">Passengers</label>
+                                    <input id="customer-passengers" type="number" class="w-full mt-1 p-2 border rounded"
+                                        value="2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <label id="input-label"
+                            class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Input WhatsApp
+                            Message</label>
+                        <textarea id="message"
+                            class="w-full h-64 p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-slate-800"
+                            placeholder="Paste a WhatsApp message here..."></textarea>
+
+                        <div id="db-toggle" class="mt-4 flex items-center">
+                            <input type="checkbox" id="saveToDb"
+                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="saveToDb" class="ml-2 text-sm text-slate-600">Save results to PostgreSQL
+                                (Real-time storage)</label>
+                        </div>
+
+                        <button onclick="extract()" id="btn-extract"
+                            class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
+                            <span id="btn-text">RUN EXTRACTION</span>
+                            <svg id="loading" class="hidden animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Output Area -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Extracted
+                            JSON Results</label>
+                        <div class="relative">
+                            <pre id="output"
+                                class="w-full h-80 p-4 rounded-xl border border-slate-200 bg-slate-900 text-green-400 overflow-auto text-sm font-mono whitespace-pre-wrap">Results will appear here...</pre>
+                            <button onclick="copyResults()"
+                                class="absolute top-2 right-2 text-slate-400 hover:text-white transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div id="status-bar" class="mt-4 hidden animate-pulse">
+                            <span
+                                class="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">COMPLETED</span>
+                        </div>
+
+                        <div id="whatsapp-preview"
+                            class="hidden mt-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm">
+                            <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-widest mb-4">WhatsApp
+                                Message Preview</h3>
+                            <div id="msg-content"
+                                class="text-slate-700 text-sm whitespace-pre-wrap bg-white p-4 rounded-lg shadow-inner">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-slate-400 text-sm">
+            Powered by Anthropic Claude Sonnet 3.5 & PostgreSQL
+        </footer>
+    </div>
+
+    <script>
+        let currentTab = 'customer';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-customer').classList.remove('tab-active');
+            document.getElementById('tab-supplier').classList.remove('tab-active');
+            document.getElementById('tab-response').classList.remove('tab-active');
+            document.getElementById('tab-' + tab).classList.add('tab-active');
+
+            const msg = document.getElementById('message');
+            const custFields = document.getElementById('customer-info-fields');
+            const inputLabel = document.getElementById('input-label');
+            const dbToggle = document.getElementById('db-toggle');
+            const btnText = document.getElementById('btn-text');
+            const whatsappPreview = document.getElementById('whatsapp-preview');
+
+            whatsappPreview.classList.add('hidden');
+            custFields.classList.add('hidden');
+            dbToggle.classList.remove('hidden');
+
+            if (tab === 'customer') {
+                inputLabel.innerText = "Input Customer WhatsApp Message";
+                btnText.innerText = "RUN EXTRACTION";
+                msg.placeholder = "Example: I wan fly from Lagos to Abuja next Friday, 2 people. Not more than 200k abeg";
+                msg.value = "I wan fly from Lagos to Abuja next Friday, 2 people. Not more than 200k abeg";
+            } else if (tab === 'supplier') {
+                inputLabel.innerText = "Input Supplier Group Message";
+                btnText.innerText = "RUN EXTRACTION";
+                msg.placeholder = "Example: AP LOS-ABV 45k 7am tomoro available 2 seats...";
+                msg.value = "AP LOS-ABV 45k 7am tomoro available 2 seats\nI have Air Peace Lagos to Abuja 40k and 45k for tomorrow morning. Afternoon flight 38k. Call me";
+            } else {
+                inputLabel.innerText = "Input Quotes Array (JSON)";
+                btnText.innerText = "GENERATE RESPONSE";
+                custFields.classList.remove('hidden');
+                dbToggle.classList.add('hidden');
+                msg.placeholder = "Paste the quotes JSON array here...";
+                msg.value = JSON.stringify([
+                    { id: "q1", airline: "Air Peace", route: "LOS-ABV", price: 45000, departure_time: "07:00", class: "economy", stops: 0 },
+                    { id: "q2", airline: "Ibom Air", route: "LOS-ABV", price: 42000, departure_time: "09:30", class: "economy", stops: 0 },
+                    { id: "q3", airline: "Dana Air", route: "LOS-ABV", price: 38000, departure_time: "15:00", class: "economy", stops: 0 }
+                ], null, 2);
+            }
+        }
+
+        async function extract() {
+            const message = document.getElementById('message').value;
+            const saveToDb = document.getElementById('saveToDb').checked;
+            const output = document.getElementById('output');
+            const btn = document.getElementById('btn-extract');
+            const loader = document.getElementById('loading');
+            const statusBar = document.getElementById('status-bar');
+            const whatsappPreview = document.getElementById('whatsapp-preview');
+            const msgContent = document.getElementById('msg-content');
+
+            if (!message) return alert("Please enter input!");
+
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            output.innerText = "Thinking...";
+            statusBar.classList.add('hidden');
+            whatsappPreview.classList.add('hidden');
+
+            let url, body;
+
+            if (currentTab === 'customer') {
+                url = '/api/extract/inquiry';
+                body = { message, saveToDb };
+            } else if (currentTab === 'supplier') {
+                url = '/api/extract/quotes';
+                body = { message, saveToDb };
+            } else {
+                url = '/api/generate/response';
+                body = {
+                    customerInfo: {
+                        name: document.getElementById('customer-name').value,
+                        inquiry: {
+                            origin: "Lagos",
+                            destination: "Abuja",
+                            date: "2026-03-15",
+                            passengers: parseInt(document.getElementById('customer-passengers').value),
+                            class: "economy"
+                        }
+                    },
+                    quotes: JSON.parse(message)
+                };
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                output.innerText = JSON.stringify(data, null, 2);
+                statusBar.classList.remove('hidden');
+
+                if (currentTab === 'response' && data.whatsapp_message) {
+                    whatsappPreview.classList.remove('hidden');
+                    msgContent.innerText = data.whatsapp_message;
+                }
+            } catch (err) {
+                output.innerText = "Error: " + err.message;
+            } finally {
+                btn.disabled = false;
+                loader.classList.add('hidden');
+            }
+        }
+
+        function copyResults() {
+            const text = document.getElementById('output').innerText;
+            navigator.clipboard.writeText(text);
+        }
+
+        // Init
+        switchTab('customer');
+    </script>
+</body>
+
+</html>

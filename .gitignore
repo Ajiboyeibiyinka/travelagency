@@ -1,0 +1,23 @@
+node_modules/
+.env
+
+# Puppeteer browser session data (contains login cookies — never commit)
+# Ignore contents but keep directory structure via .gitkeep
+browser-sessions/*/*
+browser-sessions/*/**
+!browser-sessions/*/.gitkeep
+
+# Logs
+*.log
+
+# Debug / discovery artefacts (screenshots, captured HTML/JSON)
+debug-*.png
+probe-*.png
+discovery-*.png
+discovery-*.html
+discovery-*.json
+debug_content.js
+
+# Claude Code conversation data and agent state
+.claude/
+.agent/
